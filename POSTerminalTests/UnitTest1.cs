@@ -27,7 +27,7 @@ namespace POSTerminalTests
         {
             Checkout test = new Checkout();
             Checkout.cart.Clear();
-            //Assert.Equal(expected, Checkout.addToCart(item, quantity));
+            //Assert.Equal(expected, Checkout.addToCart(item, quantity));//changed the method to not return a value
         }
 
         [Theory]
@@ -49,6 +49,16 @@ namespace POSTerminalTests
         {
             Checkout.addToCart(item, quantity);
             Assert.Equal(expected, Checkout.subTotal());
+        }
+        [Theory]
+        [InlineData(21.02, 1.47)]
+        [InlineData(0, 0.00)]
+        [InlineData(41.97, 2.94)]
+        [InlineData(145.3, 10.17)]
+        [InlineData(1, 0.07)]
+        public void salestaxTests(decimal total, decimal expected)
+        {
+            Assert.Equal(expected, Checkout.salestax(total));
         }
     }
 }

@@ -41,7 +41,6 @@ namespace POSTerminal
     public class Checkout
     {
         public static Dictionary<string, int> cart = new Dictionary<string, int>();
-        private int thisTotal;
 
         public static void addToCart(string item, int quantity)
         {
@@ -57,9 +56,6 @@ namespace POSTerminal
             {
                 cart[item] = quantity;
             }
-
-
-
         }
         public decimal lineTotal(int quantity, decimal price)
         {
@@ -131,17 +127,18 @@ namespace POSTerminal
                     thisTotal = (item.Value * Program.addOn.xprice) + thisTotal;
                 }
             }
-
-
             return thisTotal;
         }
-
         public static void ListReceipt()
         {
-            decimal thisTotal = 0.00m;
+            string spacing;
+            decimal thisTotal;
+
+            Console.Write("Qty\tItem\t\t\t\tLine Price\n\n");
 
             foreach (KeyValuePair<string, int> item in cart)
             {
+                thisTotal = 0.00m;
                 if (item.Key == Program.newHardCover.xname)
                 {
                     thisTotal = (item.Value * Program.newHardCover.xprice) + thisTotal;
@@ -202,7 +199,20 @@ namespace POSTerminal
                 {
                     thisTotal = (item.Value * Program.addOn.xprice) + thisTotal;
                 }
-                Console.Write($"{item.Value} X {item.Key} ::::::: ${thisTotal}\n");
+                Console.Write($"{item.Value}\t{item.Key} ");
+                if (item.Key.Length < 11)
+                {
+                    spacing = "\t\t\t";
+                }
+                else if (item.Key.Length > 18)
+                {
+                    spacing = "\t";
+                }
+                else
+                {
+                    spacing = "\t\t";
+                }
+                Console.WriteLine($"{spacing} ${thisTotal}\n");
             }
         }
         public static decimal salestax(decimal total)
@@ -216,47 +226,7 @@ namespace POSTerminal
             total = total * 1.07m;
             total = Math.Round(total, 2);
 
-
             return total;
-        }
-        public static void tenderOrder(decimal tender)
-        {
-            bool notPaid = true;
-            bool invalid = true;
-            decimal orderTotal = grandTotal(subTotal());
-            string input;
-            do
-            {
-                if (tender < orderTotal)
-                {
-                    do
-                    {
-                        Console.Write($"\n\nAmount Still Due: ${orderTotal - tender}\n\n");
-                        orderTotal = orderTotal - tender;
-                        
-                        Console.Write("Please Enter the Cash Tendered: $");
-                        input = Console.ReadLine().ToLower();
-                        invalid = Program.ValidateToDec(input);
-                        if (invalid == false)
-                        {
-                            tender = decimal.Parse(input);
-                        }
-                        else
-                        {
-                            Program.InvalidMessage(3);
-                        }
-                    } while (invalid);
-                }
-                else
-                {
-                    notPaid = false;
-                    Console.WriteLine($"\n\nCustomer's Change is ${tender - orderTotal}");
-                    Console.Write("\n\nPress enter to return to the main menu.\n\n");
-                    Console.ReadLine();
-                    Checkout.cart.Clear();
-
-                }
-            } while (notPaid);
         }
     }
     class Program
@@ -284,13 +254,50 @@ namespace POSTerminal
             createMenu();
             do
             {
-
                 PrintMenu();
 
                 menuChoice = MenuInput();
 
                 loop = InputDirectory(menuChoice);
             } while (loop);
+        }
+        public static void tenderOrder(decimal tender)
+        {
+            bool notPaid = true;
+            bool invalid = true;
+            decimal orderTotal = Checkout.grandTotal(Checkout.subTotal());
+            string input;
+            do
+            {
+                if (tender < orderTotal)
+                {
+                    do
+                    {
+                        Console.Write($"\n\nAmount Still Due: ${orderTotal - tender}\n\n");
+                        orderTotal = orderTotal - tender;
+
+                        Console.Write("Please Enter the Cash Tendered: $");
+                        input = Console.ReadLine().ToLower();
+                        invalid = Program.ValidateToDec(input);
+                        if (invalid == false)
+                        {
+                            tender = decimal.Parse(input);
+                        }
+                        else
+                        {
+                            Program.InvalidMessage(3);
+                        }
+                    } while (invalid);
+                }
+                else
+                {
+                    notPaid = false;
+                    Console.WriteLine($"\n\nCustomer's Change is ${tender - orderTotal}");
+                    Console.Write("\n\nPress enter to return to the main menu.\n\n");
+                    Console.ReadLine();
+                    Checkout.cart.Clear();
+                }
+            } while (notPaid);
         }
         static void CartInterface(int choice)
         {
@@ -321,9 +328,7 @@ namespace POSTerminal
                     Console.Write($"\nLine total: ${lineAmount}");
                     Console.Write("\n\nPress enter to return to the main menu.\n\n");
                     Console.ReadLine();
-
                 }
-
             } while (invalid);
         }
         static decimal TenderCash()
@@ -335,14 +340,22 @@ namespace POSTerminal
             do
             {
                 Console.Write($"Grand Total: ${Checkout.grandTotal(Checkout.subTotal())}\n");
-                Console.Write("::::::::::::::::::::::::::::::::::::::\n\n");
+                Console.Write("::::::::::::::::::::::::::::::::::::::::::::::::::\n\n");
                 Console.Write("Please Enter the Cash Tendered: $");
                 input = Console.ReadLine().ToLower();
                 invalid = ValidateToDec(input);
                 if (invalid == false)
                 {
                     tender = decimal.Parse(input);
-                    Checkout.tenderOrder(tender);
+                    if (tender < 0)
+                    {
+                        invalid = true;
+                        InvalidMessage(4);
+                    }
+                    else
+                    {
+                        tenderOrder(tender);
+                    }
                 }
                 else
                 {
@@ -356,9 +369,6 @@ namespace POSTerminal
             bool loop = true;
             decimal tender;
             decimal change;
-            bool billNotPaid = true;
-
-
 
             if (choice == menu.Count + 3)
             {
@@ -373,19 +383,16 @@ namespace POSTerminal
             }
             else if (choice == menu.Count + 1)
             {
-                Console.Write("\n\n:::::::::::::::CheckOut:::::::::::::::\n\n");
+                Console.Write("\n\n:::::::::::::::::::::CheckOut:::::::::::::::::::::\n");
+                Console.Write("\n:::::::::::::::::::::Receipt::::::::::::::::::::::\n\n");
+
                 Checkout.ListReceipt();
                 Console.WriteLine();
                 Console.Write($"SubTotal: ${Checkout.subTotal()}\n");
                 Console.Write($"Sales Tax: ${Checkout.salestax(Checkout.subTotal())}\n");
-                Console.Write("::::::::::::::::::::::::::::::::::::::\n");
+                Console.Write("::::::::::::::::::::::::::::::::::::::::::::::::::\n");
 
                 tender = TenderCash();
-                
-
-
-
-
             }
             else if (choice == menu.Count)
             {
@@ -405,7 +412,6 @@ namespace POSTerminal
                 {
                     Console.Write(0);
                 }
-
                 CartInterface(choice);
             }
             return loop;
@@ -423,7 +429,6 @@ namespace POSTerminal
                 if (invalid == true)
                 {
                     InvalidMessage(1);
-
                     PrintMenu();
                 }
                 else
@@ -436,7 +441,6 @@ namespace POSTerminal
                         PrintMenu();
                     }
                 }
-
             } while (invalid);
             return menuChoice - 1;
         }
@@ -526,6 +530,9 @@ namespace POSTerminal
                     break;
                 case 3:
                     Console.Write("\n\nThat was not a valid entry. Please enter the correct cash tendered.\n\n");
+                    break;
+                case 4:
+                    Console.Write("\n\nThat was not a valid entry. Please enter a positive amount of cash to tender.\n\n");
                     break;
             }
         }
