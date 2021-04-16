@@ -47,14 +47,14 @@ namespace POSTerminal
             if (cart.ContainsKey(item) == true)
             {
                 cart[item] += quantity;
-                if (cart[item] < 0)
-                {
-                    cart[item] = 0;
-                }
             }
             else
             {
                 cart[item] = quantity;
+            }
+            if (cart[item] < 0)
+            {
+                cart[item] = 0;
             }
         }
         public decimal lineTotal(int quantity, decimal price)
@@ -320,6 +320,7 @@ namespace POSTerminal
                     quantity = Int32.Parse(input);
 
                     Checkout.addToCart(menu[choice].xname, quantity);
+
                     //need this to say how many are in the cart and the line total.
                     Console.Write($"\n\nQuantity now in cart: {Checkout.cart[menu[choice].xname]}");
 
